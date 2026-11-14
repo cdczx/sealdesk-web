@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#f5f6fa" />
+  <title>印章工坊 · SealDesk LAN</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="identity"><div class="mark" aria-hidden="true">印</div><div><strong>印章工坊</strong><span>SealDesk <b>LAN</b> · 私有化部署</span></div></div>
+    <div class="topright"><span class="status"><i></i> 局域网私有处理</span><a href="#help" id="help-open">使用帮助</a></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-title"><span class="step">01</span><h2>选择文件</h2><span class="panel-tag">最多 12 份 PDF</span></div>
+        <label class="dropzone" id="pdf-drop" for="pdf-files">
+          <span class="dropicon">⇧</span><strong>点击或拖入 PDF 文件</strong><small>单个文件不超过 50 MB，可批量盖章</small>
+        </label>
+        <input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple hidden />
+        <div class="file-list" id="pdf-list"></div>
+        <div class="password-row"><label for="input-password">原 PDF 密码（如有）</label><input type="password" id="input-password" autocomplete="off" placeholder="没有则留空" /></div>
+      </section>
+      <section class="panel">
+        <div class="panel-title"><span class="step">02</span><h2>印章素材</h2><span class="panel-tag">PNG / JPG / WebP</span></div>
+        <label class="mini-drop" for="seal-files"><span>＋</span> 添加印章图片</label>
+        <input id="seal-files" type="file" multiple accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" hidden />
+        <div id="seal-list" class="seal-list"></div>
+        <p class="micro">建议使用透明底 PNG。启用「去白底」时，可以直接使用白底印章图。</p>
+      </section>
+      <section class="panel">
+        <div class="panel-title"><span class="step">03</span><h2>盖章设置</h2></div>
+        <div class="switchtabs"><button id="tab-normal" class="active" type="button">普通公章</button><button id="tab-seam" type="button">骑缝章</button></div>
+        <div id="normal-pane">
+          <div id="stamps-container"></div>
+          <button type="button" class="button add" id="add-stamp">＋ 添加一个普通章</button>
+          <p class="micro">可以给不同页面盖不同的章。点击右侧预览图中的公章，可拖动定位。</p>
+        </div>
+        <div id="seam-pane" hidden>
+          <label class="toggle-row"><input type="checkbox" id="seam-enabled" /> <strong>开启自动骑缝章</strong></label>
+          <div class="form-grid">
+            <label class="full">使用印章<select id="seam-image"></select></label>
+            <label>加盖边缘<select id="seam-side"><option value="right">右侧</option><option value="left">左侧</option><option value="top">顶部</option><option value="bottom">底部</option></select></label>
+            <label>印章直径（mm）<input type="number" id="seam-size" min="10" max="100" step="1" value="40" /></label>
+            <label>加盖页面<select id="seam-scope"><option value="all">全部页面</option><option value="odd">奇数页</option><option value="even">偶数页</option><option value="custom">指定页码</option></select></label>
+            <label>每组最多页数<input type="number" id="seam-max" value="12" min="2" max="50" /></label>
+            <label class="full seam-custom" hidden>指定页码<input id="seam-pages" placeholder="例如 1,3-8" /></label>
+            <label>居中位置（%）<input id="seam-pos" type="number" value="50" min="0" max="100" /></label>
+            <label>不透明度（%）<input id="seam-opacity" type="number" value="95" min="5" max="100" /></label>
+            <label class="full toggle-row"><input type="checkbox" id="seam-white" checked /> 自动去除白色背景</label>
+          </div>
+          <p class="micro">骑缝章会按选中页数自动分割；超过每组页数时自动分组。</p>
+        </div>
+      </section>
+      <section class="panel compact">
+        <div class="panel-title"><span class="step">04</span><h2>导出与安全</h2></div>
+        <label class="input-caption" for="output-password">输出 PDF 密码（可选）</label>
+        <input id="output-password" type="password" placeholder="留空则不加密" autocomplete="new-password" />
+        <label class="toggle-row warning"><input type="checkbox" id="allow-signed" /> 允许处理已有数字签名的 PDF（可能使签名失效）</label>
+        <div class="notice">此版本添加的是可见印章图层，不会自动生成受信任的 CA 电子签名。</div>
+      </section>
+    </aside>
+
+    <main class="main-content">
+      <div class="heading-row"><div><p class="eyebrow">DOCUMENT PREVIEW</p><h1>盖章预览</h1><p class="subtitle">在浏览器中定位印章，确认后一次导出 PDF 或 ZIP。</p></div><div class="actions"><button class="button secondary" id="reset" type="button">重置设置</button><button class="button primary" id="export" type="button" disabled>导出已盖章 PDF <span aria-hidden="true">↗</span></button></div></div>
+      <div class="preview-box">
+        <div class="preview-toolbar"><div class="file-select"><span class="tinylabel">预览文件</span><select id="preview-file" disabled><option>尚未选择文件</option></select></div><div class="pagination"><button id="prev-page" type="button" disabled aria-label="上一页">‹</button><strong><span id="current-page">—</span> / <span id="total-pages">—</span></strong><button id="next-page" type="button" disabled aria-label="下一页">›</button></div><span class="hint">拖动普通公章可定位</span></div>
+        <div id="preview-stage" class="preview-stage"><div id="empty-state" class="empty-state"><div class="empty-icon"><span>PDF</span><i>✓</i></div><h2>从左侧添加 PDF 开始</h2><p>支持多页预览、批量盖章、骑缝章和 PDF 密码保护。</p><label class="button primary" for="pdf-files">选择 PDF 文件</label></div><div id="paper-wrap" class="paper-wrap" hidden><img id="pdf-page" alt="PDF 页面预览" draggable="false" /><div id="overlay" class="overlay"></div></div><div id="preview-loading" class="loading" hidden>正在渲染 PDF 页面…</div></div>
+        <div class="preview-footer"><span><b id="document-info">尚未载入文档</b></span><span id="safety-note">文件在当前服务内存中处理，不保存文档到磁盘</span></div>
+      </div>
+      <div class="features"><div><span class="feature-icon">◩</span><b>保留原 PDF 文字</b><small>图层叠加，不主动转图片</small></div><div><span class="feature-icon">❖</span><b>自动分割骑缝章</b><small>四边可选，可跨多页</small></div><div><span class="feature-icon">⌑</span><b>本地私有部署</b><small>无需外部云服务或 CDN</small></div></div>
+    </main>
+  </div>
+  <dialog id="help"><div class="help-head"><h2>使用帮助</h2><button id="help-close" type="button">×</button></div><p><strong>① 添加 PDF</strong>：支持一次上传多份 PDF；右侧按文件切换预览。</p><p><strong>② 添加印章素材</strong>：推荐透明底公章 PNG，也支持 JPG／自动去白底。</p><p><strong>③ 普通章</strong>：新增普通章后设置页码、尺寸、不透明度；右侧拖动图章可定位。</p><p><strong>④ 骑缝章</strong>：切换到骑缝章，打开开关并设置加盖边缘。每组 PDF 页面自动把同一印章分割成等宽条。</p><p><strong>⑤ 导出</strong>：单份输出 PDF，多份输出 ZIP。PDF 文字通常仍可选择；已有数字签名可能失效。</p><p class="help-disclaimer">文件仅发送到你部署的局域网服务端进行处理，不传到第三方；若局域网不可信，请在反向代理配置 HTTPS。</p></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

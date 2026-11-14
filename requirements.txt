@@ -1,0 +1,7 @@
+fastapi==0.128.2
+uvicorn==0.48.0
+python-multipart==0.0.33
+pypdf[crypto]==6.21.4
+reportlab==4.4.9
+Pillow==12.3.0
+pypdfium2==5.15.2
